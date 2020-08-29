@@ -4,12 +4,14 @@ open import Data.Nat using (ℕ; zero; suc)
 open import Data.Fin using (Fin; zero; suc)
 open import Data.Vec using (Vec; []; _∷_; _++_; map)
 
+-- Operator precedences.
 infix 10 _^⊥ e?_ e!_
 infixl 9 _⊗_ _&_
 infixl 8 _⊕_ _⅋_
 infixl 7 _⊸_
 infixl 6 _≡_
 
+-- Primitive linear propositions.
 data LinearProp {a} (A : Set a) : Set a where
   atom : A → LinearProp A
   atom^⊥ : A → LinearProp A
@@ -24,6 +26,7 @@ data LinearProp {a} (A : Set a) : Set a where
   e!_ : LinearProp A → LinearProp A
   e?_ : LinearProp A → LinearProp A
 
+-- The equivalent of the propositional negation, called "dual".
 _^⊥ : ∀ {a} {A : Set a} → LinearProp A → LinearProp A
 (atom p) ^⊥ = atom^⊥ p
 (atom^⊥ p) ^⊥ = atom p
@@ -38,12 +41,15 @@ u⊤ ^⊥ = u0
 (e! p) ^⊥ = e? (p ^⊥)
 (e? p) ^⊥ = e! (p ^⊥)
 
+-- The linear implication, also called "lollipop operator".
 _⊸_ : ∀ {a} {A : Set a} → LinearProp A → LinearProp A → LinearProp A
 p ⊸ q = p ^⊥ ⅋ q
 
+-- The equivalent of the propositional equivalence (lmao).
 _≡_ : ∀ {a} {A : Set a} → LinearProp A → LinearProp A → LinearProp A
 p ≡ q = (p ⊸ q) & (q ⊸ p)
 
+-- Swaps the first element with a given position. Just a helper of `swap`.
 swap-vec-first : ∀ {a} {A : Set a}
                {n : ℕ} →
                Fin n →
@@ -52,6 +58,7 @@ swap-vec-first : ∀ {a} {A : Set a}
 swap-vec-first zero xs = xs
 swap-vec-first (suc m) (x ∷ y ∷ xs) = y ∷ swap-vec-first m (x ∷ xs)
 
+-- Swaps two elements with two given positions. Just a helper of `swap`.
 swap-vec : ∀ {a} {A : Set a}
           {n : ℕ} →
           Fin n →
@@ -63,6 +70,8 @@ swap-vec zero (suc m) xs = swap-vec-first (suc m) xs
 swap-vec (suc m) zero xs = swap-vec-first (suc m) xs 
 swap-vec (suc k) (suc m) (x ∷ xs) = x ∷ swap-vec k m xs
 
+-- List of inference rules.
+-- To prove somthing, it must be the only proposition in the sequent.
 data ⊢ {a} {A : Set a} : {n : ℕ} → Vec (LinearProp A) n → Set a where
   swap : {n : ℕ}
          {ps : Vec (LinearProp A) n} →
@@ -145,37 +154,6 @@ data ⊢ {a} {A : Set a} : {n : ℕ} → Vec (LinearProp A) n → Set a where
          ⊢ (p ∷ map e?_ ps) →
          ⊢ (e! p ∷ ps)
 
+-- Just a helper to hint something has been proven.
 Proof : ∀ {a} {A : Set a} → LinearProp A → Set a
 Proof p = ⊢ (p ∷ [])
-
--- PROOFS --
-
-⊕⊗-dist : ∀ {a}
-          {A : Set a}
-          {p q r : LinearProp A} →
-          Proof (p ⊗ (q ⊕ r) ≡ p ⊗ q ⊕ p ⊗ r)
-⊕⊗-dist {_} {_} {p} {q} {r} = &-i left⊸right right⊸left where
-  one : {n : ℕ} → Fin (suc (suc n))
-  one = suc zero
-  two : {n : ℕ} → Fin (suc (suc (suc n)))
-  two = suc one
-  left⊸right : ⊢ (p ⊗ (q ⊕ r) ⊸ p ⊗ q ⊕ p ⊗ r ∷ [])
-  left⊸right = ⅋-i (⅋-i (swap zero one q&r)) where
-    q&r : ⊢ (q ^⊥ & r ^⊥ ∷ p ^⊥ ∷ p ⊗ q ⊕ p ⊗ r ∷ [])
-    q&r = &-i q-side r-side where
-      q-side : ⊢ (q ^⊥ ∷ p ^⊥ ∷ p ⊗ q ⊕ p ⊗ r ∷ [])
-      q-side = swap one two (swap zero one disj)
-        where
-          conj : ⊢ (p ⊗ q ∷ p ^⊥ ∷ q ^⊥ ∷ [])
-          conj = ⊗-i (^⊥-i p) (^⊥-i q)
-          disj : ⊢ (p ⊗ q ⊕ p ⊗ r ∷ q ^⊥ ∷ p ^⊥ ∷ [])
-          disj = ⊕-i₁ (swap one two conj)
-      r-side : ⊢ (r ^⊥ ∷ p ^⊥ ∷ p ⊗ q ⊕ p ⊗ r ∷ [])
-      r-side = swap one two (swap zero one disj)
-        where
-          conj : ⊢ (p ⊗ r ∷ p ^⊥ ∷ r ^⊥ ∷ [])
-          conj = ⊗-i (^⊥-i p) (^⊥-i r)
-          disj : ⊢ (p ⊗ q ⊕ p ⊗ r ∷ r ^⊥ ∷ p ^⊥ ∷ [])
-          disj = ⊕-i₂ (swap one two conj)
-  right⊸left : ⊢ (p ⊗ q ⊕ p ⊗ r ⊸ p ⊗ (q ⊕ r) ∷ [])
-  right⊸left = {!!}
