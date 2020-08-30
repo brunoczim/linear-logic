@@ -74,7 +74,13 @@ swap-vec (suc k) (suc m) (x ∷ xs) = x ∷ swap-vec k m xs
 -- List of inference rules.
 -- The S parameter is an axiom scheme.
 -- To prove somthing, it must be the only proposition in the sequent.
-data _⊢_ {a} {A : Set a} (S : LinearProp A → Set a) : {n : ℕ} → Vec (LinearProp A) n → Set a where
+data _⊢_ {a}
+         {A : Set a}
+         (S : LinearProp A → Set a) :
+         {n : ℕ} →
+         Vec (LinearProp A) n
+         → Set a
+         where
   empty : S ⊢ []
 
   axiom : {p : LinearProp A} → S p → S ⊢ (p ∷ [])
