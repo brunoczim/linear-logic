@@ -165,7 +165,7 @@ data _⊢_ {a}
          {n : ℕ}
          {ps : Vec (LinearProp A) n} →
          S ⊢ (p ∷ map e?_ ps) →
-         S ⊢ (e! p ∷ ps)
+         S ⊢ (e! p ∷ map e?_ ps)
 
 -- Empty axiom scheme.
 data NoAxioms {a} {A : Set a} : LinearProp A → Set a where
