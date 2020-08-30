@@ -81,6 +81,7 @@ data _⊢_ {a}
          Vec (LinearProp A) n
          → Set a
          where
+
   empty : S ⊢ []
 
   axiom : {p : LinearProp A} → S p → S ⊢ (p ∷ [])
