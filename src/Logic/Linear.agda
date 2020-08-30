@@ -3,6 +3,7 @@ module Logic.Linear where
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Fin using (Fin; zero; suc)
 open import Data.Vec using (Vec; []; _∷_; _++_; map)
+open import Data.Empty using (⊥)
 
 -- Operator precedences.
 infix 10 _^⊥ e?_ e!_
@@ -71,89 +72,97 @@ swap-vec (suc m) zero xs = swap-vec-first (suc m) xs
 swap-vec (suc k) (suc m) (x ∷ xs) = x ∷ swap-vec k m xs
 
 -- List of inference rules.
+-- The S parameter is an axiom scheme.
 -- To prove somthing, it must be the only proposition in the sequent.
-data ⊢ {a} {A : Set a} : {n : ℕ} → Vec (LinearProp A) n → Set a where
+data _⊢_ {a} {A : Set a} (S : LinearProp A → Set a) : {n : ℕ} → Vec (LinearProp A) n → Set a where
+  empty : S ⊢ []
+
+  axiom : {p : LinearProp A} → S p → S ⊢ (p ∷ [])
+
   swap : {n : ℕ}
          {ps : Vec (LinearProp A) n} →
          (i j : Fin n) →
-         ⊢ ps →
-         ⊢ (swap-vec i j ps)
+         S ⊢ ps →
+         S ⊢ (swap-vec i j ps)
 
-  ^⊥-i : (p : LinearProp A) → ⊢ (p ∷ p ^⊥ ∷ [])
+  ^⊥-i : (p : LinearProp A) → S ⊢ (p ∷ p ^⊥ ∷ [])
 
   ^⊥-e : {p : LinearProp A}
         {m n : ℕ}
         {ps : Vec (LinearProp A) m} →
         {qs : Vec (LinearProp A) n} →
-        ⊢ (p ∷ ps) →
-        ⊢ (p ^⊥ ∷ qs) →
-        ⊢ (ps ++ qs)
+        S ⊢ (p ∷ ps) →
+        S ⊢ (p ^⊥ ∷ qs) →
+        S ⊢ (ps ++ qs)
 
   ⊗-i : {p q : LinearProp A}
         {m n : ℕ}
         {ps : Vec (LinearProp A) m} →
         {qs : Vec (LinearProp A) n} →
-        ⊢ (p ∷ ps) →
-        ⊢ (q ∷ qs) →
-        ⊢ (p ⊗ q ∷ ps ++ qs)
+        S ⊢ (p ∷ ps) →
+        S ⊢ (q ∷ qs) →
+        S ⊢ (p ⊗ q ∷ ps ++ qs)
 
   ⅋-i : {p q : LinearProp A}
         {n : ℕ}
         {ps : Vec (LinearProp A) n} →
-        ⊢ (p ∷ q ∷ ps) →
-        ⊢ (p ⅋ q ∷ ps)
+        S ⊢ (p ∷ q ∷ ps) →
+        S ⊢ (p ⅋ q ∷ ps)
 
-  u1-i : ⊢ (u1 ∷ [])
+  u1-i : S ⊢ (u1 ∷ [])
 
-  u⊥-i : {n : ℕ} {ps : Vec (LinearProp A) n} → ⊢ ps →  ⊢ (u⊥ ∷ ps)
+  u⊥-i : {n : ℕ} {ps : Vec (LinearProp A) n} → S ⊢ ps →  S ⊢ (u⊥ ∷ ps)
 
   &-i : {p q : LinearProp A}
         {n : ℕ}
         {ps : Vec (LinearProp A) n} →
-        ⊢ (p ∷ ps) →
-        ⊢ (q ∷ ps) →
-        ⊢ (p & q ∷ ps)
+        S ⊢ (p ∷ ps) →
+        S ⊢ (q ∷ ps) →
+        S ⊢ (p & q ∷ ps)
 
   ⊕-i₁ : {p q : LinearProp A}
          {n : ℕ}
          {ps : Vec (LinearProp A) n} →
-         ⊢ (p ∷ ps) →
-         ⊢ (p ⊕ q ∷ ps)
+         S ⊢ (p ∷ ps) →
+         S ⊢ (p ⊕ q ∷ ps)
 
   ⊕-i₂ : {p q : LinearProp A}
          {n : ℕ}
          {ps : Vec (LinearProp A) n} →
-         ⊢ (p ∷ ps) →
-         ⊢ (q ⊕ p ∷ ps)
+         S ⊢ (p ∷ ps) →
+         S ⊢ (q ⊕ p ∷ ps)
 
   u⊤-i : {n : ℕ}
         {ps : Vec (LinearProp A) n} →
-        ⊢ (u⊤ ∷ ps)
+        S ⊢ (u⊤ ∷ ps)
  
   e?-i₁ : {p : LinearProp A}
          {n : ℕ}
          {ps : Vec (LinearProp A) n} →
-         ⊢ ps →
-         ⊢ (e? p ∷ ps)
+         S ⊢ ps →
+         S ⊢ (e? p ∷ ps)
          
   e?-i₂ : {p : LinearProp A}
          {n : ℕ}
          {ps : Vec (LinearProp A) n} →
-         ⊢ (p ∷ ps) →
-         ⊢ (e? p ∷ ps)
+         S ⊢ (p ∷ ps) →
+         S ⊢ (e? p ∷ ps)
 
   e?-e : {p : LinearProp A}
          {n : ℕ}
          {ps : Vec (LinearProp A) n} →
-         ⊢ (e? p ∷ e? p ∷ ps) →
-         ⊢ (e? p ∷ ps)
+         S ⊢ (e? p ∷ e? p ∷ ps) →
+         S ⊢ (e? p ∷ ps)
 
   e!-i : {p : LinearProp A}
          {n : ℕ}
          {ps : Vec (LinearProp A) n} →
-         ⊢ (p ∷ map e?_ ps) →
-         ⊢ (e! p ∷ ps)
+         S ⊢ (p ∷ map e?_ ps) →
+         S ⊢ (e! p ∷ ps)
+
+-- Empty axiom scheme.
+data NoAxioms {a} {A : Set a} : LinearProp A → Set a where
 
 -- Just a helper to hint something has been proven.
-Proof : ∀ {a} {A : Set a} → LinearProp A → Set a
-Proof p = ⊢ (p ∷ [])
+Proof : ∀ {a} {A : Set a} → (LinearProp A → Set a) → LinearProp A → Set a
+Proof S p = S ⊢ (p ∷ [])
