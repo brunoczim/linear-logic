@@ -50,15 +50,6 @@ p ⊸ q = p ^⊥ ⅋ q
 _≡_ : ∀ {a} {A : Set a} → LinearProp A → LinearProp A → LinearProp A
 p ≡ q = (p ⊸ q) & (q ⊸ p)
 
--- Swaps the first element with a given position. Just a helper of `swap`.
-swap-vec-first : ∀ {a} {A : Set a}
-               {n : ℕ} →
-               Fin n →
-               Vec A n →
-               Vec A n
-swap-vec-first zero xs = xs
-swap-vec-first (suc m) (x ∷ y ∷ xs) = y ∷ swap-vec-first m (x ∷ xs)
-
 -- Swaps two elements with two given positions. Just a helper of `swap`.
 swap-vec : ∀ {a} {A : Set a}
           {n : ℕ} →
@@ -66,10 +57,31 @@ swap-vec : ∀ {a} {A : Set a}
           Fin n →
           Vec A n →
           Vec A n
-swap-vec zero zero xs = xs
-swap-vec zero (suc m) xs = swap-vec-first (suc m) xs 
-swap-vec (suc m) zero xs = swap-vec-first (suc m) xs 
-swap-vec (suc k) (suc m) (x ∷ xs) = x ∷ swap-vec k m xs
+swap-vec = do-swap where
+  insert : ∀ {a} {A : Set a}
+              {n : ℕ} →
+              A → 
+              Vec A (suc n) →
+              Vec A (suc (suc n))
+  insert y (x ∷ xs) = x ∷ y ∷ xs
+  swap-first : ∀ {a} {A : Set a}
+              {n : ℕ} →
+              Fin n →
+              Vec A n →
+              Vec A n
+  swap-first zero xs = xs
+  swap-first (suc zero) (x ∷ y ∷ xs) = y ∷ x ∷ xs
+  swap-first (suc m) (x ∷ y ∷ xs) = insert y (swap-first m (x ∷ xs))
+  do-swap : ∀ {a} {A : Set a}
+            {n : ℕ} →
+            Fin n →
+            Fin n →
+            Vec A n →
+            Vec A n
+  do-swap zero zero xs = xs
+  do-swap zero (suc m) xs = swap-first (suc m) xs 
+  do-swap (suc m) zero xs = swap-first (suc m) xs 
+  do-swap (suc k) (suc m) (x ∷ xs) = x ∷ do-swap k m xs
 
 -- List of inference rules.
 -- The S parameter is an axiom scheme.
