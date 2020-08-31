@@ -90,6 +90,7 @@ e!-iso {_} {_} S {p} {q} = &-i left⊸right right⊸left where
     swapped : S ⊢ (e? (p ^⊥) ∷ e? (q ^⊥) ∷ e! (p & q) ∷ [])
     swapped = swap one two (swap zero one (e!-i conj))
 
+-- Proof of mapping of _⊗_ and _⅋_: p ⊗ (q ⅋ r) ⊸ (p ⊗ q) ⅋ r.
 ⊗⅋-map : ∀ {a}
          {A : Set a}
          (S : LinearProp A → Set a)
